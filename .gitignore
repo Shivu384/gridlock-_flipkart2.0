@@ -1,0 +1,89 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+.installed.cfg
+MANIFEST
+
+# ─── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ─── ML model weights (large binary files) ────────────────────────────────────
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.weights
+
+# ─── Output / inference artefacts ────────────────────────────────────────────
+runs/
+outputs/
+output/
+*.mp4
+*.avi
+*.mkv
+annotated_*.jpg
+annotated_*.png
+
+# ─── Environment / secrets ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.key
+secrets.yaml
+
+# ─── IDE & OS ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Node / Frontend ─────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+*.local
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+pip-log.txt
+
+# ─── pytest / coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Jupyter ─────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ─── EasyOCR / torch cache ────────────────────────────────────────────────────
+.EasyOCR/
+torch_cache/

@@ -1,0 +1,23 @@
+# Requirements – Gridlock Traffic Violation Detection Engine + FastAPI Backend
+# Generated for Python 3.10+
+
+# ── Deep learning / computer vision ────────────────────────────────────────
+ultralytics>=8.2.0       # YOLOv8 + ByteTrack tracker
+opencv-python>=4.9.0     # VideoCapture, annotation, polygon tests
+
+# ── OCR ────────────────────────────────────────────────────────────────────
+easyocr>=1.7.1
+
+# ── Numerical ──────────────────────────────────────────────────────────────
+numpy>=1.26.0
+
+# ── FastAPI stack ───────────────────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0   # ASGI server with WebSocket support
+pydantic>=2.7.0             # v2 – used by FastAPI for validation
+python-multipart>=0.0.9     # required for file upload endpoints (future)
+websockets>=12.0            # underlying WS transport for uvicorn
+
+# ── (Optional) CUDA acceleration ───────────────────────────────────────────
+# Install the appropriate torch wheel separately, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
