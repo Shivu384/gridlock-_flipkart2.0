@@ -523,6 +523,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
             "http://localhost:8080",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:5173",
+            "https://gridlock-flipkart20.vercel.app/"
             # Add production origin(s) here, e.g. "https://gridlock.example.com"
         ],
         allow_credentials=True,
