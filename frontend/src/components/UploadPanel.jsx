@@ -7,8 +7,10 @@
  */
 
 import { useState, useRef, useCallback } from 'react';
+import { usePipeline } from '../context/PipelineContext';
+import { ACTIONS } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const CLASS_COLORS = {
   WithHelmet:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40' },
@@ -43,6 +45,7 @@ function DetectionBadge({ det }) {
 }
 
 export default function UploadPanel() {
+  const { dispatch } = usePipeline();
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState(null);
   const [file, setFile] = useState(null);
@@ -80,7 +83,10 @@ export default function UploadPanel() {
         const data = await res.json();
         throw new Error(data.detail || 'Upload failed');
       }
-      setResult(await res.json());
+      const result = await res.json();
+      setResult(result);
+      // Signal all dashboard panels to re-fetch their data
+      dispatch({ type: ACTIONS.REFRESH_SIGNAL });
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   };

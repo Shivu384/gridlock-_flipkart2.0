@@ -33,6 +33,9 @@ ENV/
 *.trt
 *.weights
 
+# Allow the project's trained weights file
+!best.pt
+
 # ─── Output / inference artefacts ────────────────────────────────────────────
 runs/
 outputs/
@@ -81,8 +84,6 @@ htmlcov/
 .ruff_cache/
 
 # ─── Jupyter ─────────────────────────────────────────────────────────────────
-.ipynb_checkpoints/
-*.ipynb
 
 # ─── EasyOCR / torch cache ────────────────────────────────────────────────────
 .EasyOCR/

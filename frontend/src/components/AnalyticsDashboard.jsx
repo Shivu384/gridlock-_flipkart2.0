@@ -7,8 +7,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { usePipeline } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const TYPE_COLORS = {
   WithoutHelmet: { hex: '#ef4444', label: 'No Helmet' },
@@ -101,6 +102,7 @@ function StatTile({ label, value, sub, color }) {
 // ─── AnalyticsDashboard ───────────────────────────────────────────────────
 
 export default function AnalyticsDashboard() {
+  const { state } = usePipeline();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [lastFetch, setLastFetch] = useState(null);
@@ -119,6 +121,12 @@ export default function AnalyticsDashboard() {
     const id = setInterval(fetchAnalytics, 30_000);
     return () => clearInterval(id);
   }, [fetchAnalytics]);
+
+  // Re-fetch immediately when a new violation arrives (upload or WebSocket)
+  useEffect(() => {
+    if (state.refreshKey > 0) fetchAnalytics();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.refreshKey]);
 
   return (
     <div className="flex flex-col gap-5 h-full overflow-y-auto pr-1 scrollbar">

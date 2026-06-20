@@ -31,6 +31,7 @@ const initialState = {
   streamStatus:  'inactive',     // active | error | inactive
   activeFilter:  null,           // null = All
   engineRunning: false,
+  refreshKey:    0,              // bumped on every new violation – siblings watch this
 };
 
 // ─── Action types ─────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ export const ACTIONS = {
   SET_STREAM_STATUS:'SET_STREAM_STATUS',
   SET_FILTER:       'SET_FILTER',
   SET_ENGINE:       'SET_ENGINE',
+  REFRESH_SIGNAL:   'REFRESH_SIGNAL',  // explicit refresh ping (e.g. after upload)
   RESET:            'RESET',
 };
 
@@ -56,12 +58,16 @@ function reducer(state, action) {
       return {
         ...state,
         violations: next,
+        refreshKey: state.refreshKey + 1,
         metrics: {
           ...state.metrics,
           total_violations: state.metrics.total_violations + 1,
         },
       };
     }
+
+    case ACTIONS.REFRESH_SIGNAL:
+      return { ...state, refreshKey: state.refreshKey + 1 };
 
     case ACTIONS.UPDATE_METRICS:
       return {

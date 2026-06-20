@@ -135,15 +135,20 @@ class OCRService:
         self._pending: Dict[int, Future] = {}
         self._pending_lock = threading.Lock()
 
-        logger.info("Initialising EasyOCR (languages=%s) …", self._cfg.languages)
-        self._reader = self._init_reader()
+        if self._cfg.enabled:
+            logger.info("Initialising EasyOCR (languages=%s) …", self._cfg.languages)
+            self._reader = self._init_reader()
+        else:
+            logger.info("OCR disabled in config – skipping EasyOCR initialization")
+            self._reader = None
 
         self._executor = ThreadPoolExecutor(
             max_workers=self._cfg.ocr_workers,
             thread_name_prefix="ocr-worker",
         )
         logger.info(
-            "OCRService ready | workers=%d | gpu=%s",
+            "OCRService ready | enabled=%s | workers=%d | gpu=%s",
+            self._cfg.enabled,
             self._cfg.ocr_workers,
             self._cfg.gpu,
         )
