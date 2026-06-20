@@ -307,8 +307,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--device",
-        default="cuda",
-        choices=["cuda", "cpu"],
+        default="cpu",
+        
         help="Inference device.",
     )
     parser.add_argument(
