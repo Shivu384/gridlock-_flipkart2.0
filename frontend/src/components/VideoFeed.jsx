@@ -4,7 +4,7 @@
  * MJPEG stream panel (70% of layout width).
  *
  * Features:
- *  - Serves stream from GET http://localhost:8000/api/stream
+ *  
  *  - "LIVE" red dot indicator + camera icon overlay
  *  - FPS from WebSocket metrics in bottom overlay
  *  - Stream status indicator (Online / Reconnecting / Offline)
@@ -109,7 +109,7 @@ function StreamOffline({ onRetry }) {
       </div>
       <div className="text-center">
         <p className="text-slate-400 font-semibold">Stream Unavailable</p>
-        <p className="text-slate-600 text-sm mt-1">Backend at localhost:8000 is unreachable</p>
+        <p className="text-slate-600 text-sm mt-1">Backend  is unreachable</p>
       </div>
       <button
         onClick={onRetry}

@@ -1,7 +1,7 @@
 /**
  * useWebSocket.js
  * ---------------
- * Manages the WebSocket connection to ws://localhost:8000/ws/live.
+ * 
  *
  * Features:
  *  - Exponential backoff reconnection (1s → 2s → 4s … capped at 30s)
