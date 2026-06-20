@@ -149,6 +149,7 @@ class ViolationConfig:
 class OCRConfig:
     """EasyOCR settings."""
 
+    enabled: bool = False
     languages: List[str] = field(default_factory=lambda: ["en"])
     gpu: bool = True
     # Async thread-pool workers dedicated to OCR

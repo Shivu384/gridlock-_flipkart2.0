@@ -410,20 +410,53 @@ def _get_analysis_detector(app_state):
     return app_state.analysis_detector
 
 
+def _derive_violations_from_detections(detections, frame_id: int, timestamp: str):
+    """
+    Run the helmet + triple-riding violation rules on a list of DetectionRecord
+    objects (as returned by Detector.detect).
+
+    Returns a list of ViolationEvent dataclass instances.
+    Illegal-parking is skipped for single-image uploads (requires dwell data).
+    """
+    from backend.services.violation_engine import rule_without_helmet, rule_triple_riding
+    violations = []
+    violations.extend(rule_without_helmet(detections, frame_id, timestamp))
+    violations.extend(rule_triple_riding(detections, frame_id, timestamp))
+    return violations
+
+
 @router.post(
     "/api/upload",
     response_model=UploadResponse,
     summary="Run on-demand YOLO detection on an uploaded image",
 )
 async def upload_image(
+    request: Request,
     file: UploadFile = File(..., description="JPEG / PNG image to analyse"),
     app_state=Depends(get_app_state),
 ) -> UploadResponse:
     """
-    Accept an image file, run YOLOv8 detection, and return the annotated
-    image (base-64 JPEG) together with all detection records.
+    Accept an image file, run YOLOv8 detection, derive violation events, and
+    return the annotated image (base-64 JPEG) together with all detection records.
+
+    Side-effects (what updates after upload)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    * Any WithoutHelmet / TripleRiding detections are converted into
+      ViolationEvent objects and appended to pipeline._violations so that
+      GET /api/violations, GET /api/analytics, and GET /api/heatmap
+      all reflect the result immediately.
+    * pipeline._total_violations and pipeline._frames_processed counters
+      are incremented.
+    * A violation WebSocket event is broadcast for each new violation so the
+      frontend live panel updates without polling.
     """
+    from datetime import datetime, timezone
+    from dataclasses import asdict
+
     contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Could not decode image. Ensure it is a valid JPEG or PNG.")
+
     nparr = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if frame is None:
@@ -431,13 +464,61 @@ async def upload_image(
 
     h, w = frame.shape[:2]
 
-    detector = await asyncio.get_running_loop().run_in_executor(
-        None, _get_analysis_detector, app_state
-    )
-    detections = await asyncio.get_running_loop().run_in_executor(
-        None, detector.detect, frame, False
+    loop = asyncio.get_running_loop()
+
+    detector = await loop.run_in_executor(None, _get_analysis_detector, app_state)
+    detections = await loop.run_in_executor(None, detector.detect, frame, False)
+
+    # ── Derive violations from detections ────────────────────────────────────
+    timestamp = datetime.now(tz=timezone.utc).isoformat(timespec="milliseconds")
+    pipeline   = app_state.pipeline
+
+    # Use a synthetic frame_id one beyond the last processed frame
+    with pipeline._lock:
+        upload_frame_id = pipeline._frames_processed + 1
+
+    violations = await loop.run_in_executor(
+        None,
+        _derive_violations_from_detections,
+        detections,
+        upload_frame_id,
+        timestamp,
     )
 
+    # ── Push violations into shared pipeline state ───────────────────────────
+    if violations:
+        with pipeline._lock:
+            for v in violations:
+                pipeline._violations.append(v)
+            pipeline._total_violations += len(violations)
+            pipeline._frames_processed += 1   # count the upload as a processed frame
+
+        # Broadcast WebSocket events for each violation so live panels update
+        for v in violations:
+            app_state.broadcaster.broadcast_from_thread(
+                app_state.broadcaster.make_event(
+                    WSEventType.VIOLATION,
+                    {
+                        "violation_type": v.violation_type,
+                        "track_id":       v.track_id,
+                        "plate_text":     v.plate_text,
+                        "frame_id":       v.frame_id,
+                        "timestamp":      v.timestamp,
+                        "confidence":     v.confidence,
+                        "bbox":           asdict(v.bbox),
+                        "metadata":       v.metadata,
+                    },
+                ),
+                loop,
+            )
+
+        logger.info(
+            "Upload: %d detection(s), %d violation(s) injected into pipeline state",
+            len(detections),
+            len(violations),
+        )
+
+    # ── Annotate frame and encode response ───────────────────────────────────
     annotated = _annotate_upload(frame, detections)
     _, buf = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 88])
     img_b64 = base64.b64encode(buf.tobytes()).decode()

@@ -7,8 +7,9 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { usePipeline } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const TYPE_COLORS = {
   WithoutHelmet:  [239, 68,  68],
@@ -85,6 +86,7 @@ function drawHeatmap(canvas, points) {
 }
 
 export default function HeatmapView() {
+  const { state } = usePipeline();
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [total, setTotal] = useState(0);
@@ -110,6 +112,12 @@ export default function HeatmapView() {
     const id = setInterval(fetchHeatmap, 15_000);
     return () => clearInterval(id);
   }, [fetchHeatmap]);
+
+  // Re-fetch when new violation added (upload or WebSocket)
+  useEffect(() => {
+    if (state.refreshKey > 0) fetchHeatmap();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.refreshKey]);
 
   useEffect(() => {
     drawHeatmap(canvasRef.current, points);

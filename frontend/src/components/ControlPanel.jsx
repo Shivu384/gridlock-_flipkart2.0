@@ -8,7 +8,7 @@
 import { useState, useRef } from 'react';
 import { usePipeline } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const PRESETS = [
   { label: 'Webcam 0', value: '0' },

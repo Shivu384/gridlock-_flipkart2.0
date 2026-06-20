@@ -7,8 +7,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { usePipeline } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL;
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const PAGE_SIZE = 20;
 
 const TYPE_BADGE = {
@@ -52,6 +53,7 @@ function SortIcon({ active, dir }) {
 }
 
 export default function ViolationTable() {
+  const { state } = usePipeline();
   const [all, setAll]           = useState([]);
   const [loading, setLoading]   = useState(false);
   const [search, setSearch]     = useState('');
@@ -79,6 +81,12 @@ export default function ViolationTable() {
   }, [typeFilter]);
 
   useEffect(() => { fetchViolations(); }, [fetchViolations]);
+
+  // Re-fetch whenever a new violation arrives via WebSocket or upload
+  useEffect(() => {
+    if (state.refreshKey > 0) fetchViolations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.refreshKey]);
 
   const handleSort = (col) => {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
