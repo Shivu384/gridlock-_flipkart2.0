@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL;
 
 const TYPE_COLORS = {
   WithoutHelmet: { hex: '#ef4444', label: 'No Helmet' },

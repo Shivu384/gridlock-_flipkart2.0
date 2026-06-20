@@ -8,7 +8,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL;
 
 const CLASS_COLORS = {
   WithHelmet:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40' },

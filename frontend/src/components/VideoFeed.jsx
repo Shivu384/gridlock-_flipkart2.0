@@ -16,7 +16,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { usePipeline } from '../context/PipelineContext';
 import { ACTIONS } from '../context/PipelineContext';
 
-const STREAM_URL = 'http://localhost:8000/api/stream';
+const API = import.meta.env.VITE_API_URL;
+const STREAM_URL = `${API}/api/stream`;
 
 // ─── Status overlay configs ───────────────────────────────────────────────
 

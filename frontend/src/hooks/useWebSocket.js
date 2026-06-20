@@ -13,7 +13,12 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { ACTIONS } from '../context/PipelineContext';
 
-const WS_URL = 'ws://localhost:8000/ws/live';
+const WS_URL =
+  import.meta.env.VITE_API_URL
+    .replace("https://", "wss://")
+    .replace("http://", "ws://") + "/ws/live";
+
+const ws = new WebSocket(WS_URL);
 const MAX_BACKOFF_MS = 30_000;
 const PING_INTERVAL_MS = 25_000;
 
