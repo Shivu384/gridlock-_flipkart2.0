@@ -18,7 +18,7 @@ const WS_URL =
     .replace("https://", "wss://")
     .replace("http://", "ws://") + "/ws/live";
 
-const ws = new WebSocket(WS_URL);
+
 const MAX_BACKOFF_MS = 30_000;
 const PING_INTERVAL_MS = 25_000;
 
