@@ -540,6 +540,35 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     app.include_router(api_router)   # REST  →  /api/*  +  /health
     app.include_router(ws_router)    # WS    →  /ws/live
 
+    # ------------------------------------------------------------------
+    # Frontend SPA Serving (for production deployment)
+    # ------------------------------------------------------------------
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+    from pathlib import Path
+
+    frontend_dist = Path("frontend/dist")
+    if frontend_dist.is_dir():
+        # Mount the assets directory explicitly
+        assets_dir = frontend_dist / "assets"
+        if assets_dir.is_dir():
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+        # Catch-all for React router and other files
+        @app.get("/{full_path:path}", include_in_schema=False)
+        async def serve_frontend(full_path: str):
+            # Don't intercept API or WS routes
+            if full_path.startswith("api/") or full_path.startswith("ws/"):
+                return {"detail": "Not Found"}
+            
+            # Serve specific files if they exist (favicon, manifest, etc)
+            file_path = frontend_dist / full_path
+            if file_path.is_file():
+                return FileResponse(file_path)
+                
+            # Default to index.html for SPA routing
+            return FileResponse(frontend_dist / "index.html")
+
     logger.info("FastAPI application created")
     return app
 
