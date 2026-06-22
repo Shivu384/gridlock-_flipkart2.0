@@ -410,6 +410,74 @@ def _get_analysis_detector(app_state):
     return app_state.analysis_detector
 
 
+def _get_analysis_ocr_reader(app_state):
+    """Return a lazily-initialised standalone EasyOCR reader for image uploads."""
+    if not hasattr(app_state, "analysis_ocr_reader") or app_state.analysis_ocr_reader is None:
+        cfg = app_state.pipeline.app_config.ocr
+        if not cfg.enabled:
+            app_state.analysis_ocr_reader = False
+        else:
+            import easyocr
+            app_state.analysis_ocr_reader = easyocr.Reader(cfg.languages, gpu=cfg.gpu, verbose=False)
+    return app_state.analysis_ocr_reader if app_state.analysis_ocr_reader is not False else None
+
+
+def _process_upload_detections(frame, detections, ocr_reader, app_config):
+    """Run synchronous OCR and spatial plate propagation for single-image uploads."""
+    from backend.services.ocr import _crop_bbox, _run_easyocr
+    from backend.core.state_manager import BoundingBox
+    
+    # 1. OCR (sync)
+    if ocr_reader is not None:
+        for det in detections:
+            if det.class_name == "Plate":
+                crop = _crop_bbox(frame, det.bbox)
+                if crop.size > 0:
+                    plate_text, conf = _run_easyocr(ocr_reader, crop, app_config.ocr.min_confidence)
+                    if plate_text:
+                        det.plate_text = plate_text
+                        det.plate_confidence = conf
+
+        # Fallback for vehicles that didn't get a plate detected by YOLO
+        vehicles = [d for d in detections if d.class_name in ("WithHelmet", "WithoutHelmet", "TripleRiding")]
+        for vehicle in vehicles:
+            if not vehicle.plate_text:
+                h_veh = vehicle.bbox.y2 - vehicle.bbox.y1
+                w_veh = vehicle.bbox.x2 - vehicle.bbox.x1
+                y1_fb = vehicle.bbox.y2 - int(h_veh * 0.2)
+                y2_fb = vehicle.bbox.y2 + int(h_veh * 1.2)
+                x1_fb = vehicle.bbox.x1 - int(w_veh * 0.2)
+                x2_fb = vehicle.bbox.x2 + int(w_veh * 0.2)
+                
+                fb_bbox = BoundingBox(
+                    x1=max(0, x1_fb),
+                    y1=max(0, y1_fb),
+                    x2=max(0, x2_fb),
+                    y2=max(0, y2_fb)
+                )
+                crop = _crop_bbox(frame, fb_bbox)
+                if crop.size > 0:
+                    plate_text, conf = _run_easyocr(ocr_reader, crop, app_config.ocr.min_confidence)
+                    if plate_text:
+                        vehicle.plate_text = plate_text
+                        vehicle.plate_confidence = conf
+
+    # 2. Propagate
+    plates = [d for d in detections if d.class_name == "Plate" and d.plate_text]
+    vehicles = [d for d in detections if d.class_name in ("WithHelmet", "WithoutHelmet", "TripleRiding")]
+    for vehicle in vehicles:
+        for plate in plates:
+            px = (plate.bbox.x1 + plate.bbox.x2) // 2
+            py = (plate.bbox.y1 + plate.bbox.y2) // 2
+            if (vehicle.bbox.x1 <= px <= vehicle.bbox.x2 and
+                vehicle.bbox.y1 <= py <= vehicle.bbox.y2):
+                vehicle.plate_text = plate.plate_text
+                vehicle.plate_confidence = plate.plate_confidence
+                break
+    return detections
+
+
+
 def _derive_violations_from_detections(detections, frame_id: int, timestamp: str):
     """
     Run the helmet + triple-riding violation rules on a list of DetectionRecord
@@ -467,7 +535,17 @@ async def upload_image(
     loop = asyncio.get_running_loop()
 
     detector = await loop.run_in_executor(None, _get_analysis_detector, app_state)
+    ocr_reader = await loop.run_in_executor(None, _get_analysis_ocr_reader, app_state)
+    
     detections = await loop.run_in_executor(None, detector.detect, frame, False)
+    detections = await loop.run_in_executor(
+        None, 
+        _process_upload_detections, 
+        frame, 
+        detections, 
+        ocr_reader, 
+        app_state.pipeline.app_config
+    )
 
     # ── Derive violations from detections ────────────────────────────────────
     timestamp = datetime.now(tz=timezone.utc).isoformat(timespec="milliseconds")

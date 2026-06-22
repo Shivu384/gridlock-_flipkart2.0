@@ -430,6 +430,39 @@ class VideoProcessor:
                         plate_bbox=plate_det.bbox,
                     )
 
+            # --- NEW FALLBACK LOGIC ---
+            # If YOLO completely failed to detect the plate, submit a fallback OCR job
+            # for the bottom 40% of the vehicle bounding box.
+            if has_violation_candidate:
+                for det in detections:
+                    if det.class_name in violation_classes:
+                        tid = det.track_id
+                        if tid is None:
+                            continue
+                        
+                        cached = self._state.get_cached_ocr(tid)
+                        if cached:
+                            det.plate_text, det.plate_confidence = cached
+                        elif self._ocr_svc.needs_ocr(tid):
+                            h_veh = det.bbox.y2 - det.bbox.y1
+                            w_veh = det.bbox.x2 - det.bbox.x1
+                            y1_fb = det.bbox.y2 - int(h_veh * 0.2)
+                            y2_fb = det.bbox.y2 + int(h_veh * 1.2)
+                            x1_fb = det.bbox.x1 - int(w_veh * 0.2)
+                            x2_fb = det.bbox.x2 + int(w_veh * 0.2)
+                            
+                            fb_bbox = BoundingBox(
+                                x1=max(0, x1_fb),
+                                y1=max(0, y1_fb),
+                                x2=max(0, x2_fb),
+                                y2=max(0, y2_fb)
+                            )
+                            self._ocr_svc.submit(
+                                track_id=tid,
+                                frame=frame,
+                                plate_bbox=fb_bbox,
+                            )
+
             # Propagate known plate texts to nearby vehicle detections
             self._propagate_plates(detections)
 

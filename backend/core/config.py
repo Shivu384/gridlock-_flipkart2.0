@@ -79,7 +79,7 @@ class DetectionConfig:
     """YOLO inference and ByteTrack settings."""
 
     model_path: Path = MODEL_PATH
-    confidence_threshold: float = 0.40
+    confidence_threshold: float = 0.25
     iou_threshold: float = 0.45
     device: str = field(default_factory=_default_device)
     half_precision: bool = field(default_factory=_default_half_precision)
@@ -155,7 +155,7 @@ class OCRConfig:
     # Async thread-pool workers dedicated to OCR
     ocr_workers: int = 2
     # Minimum OCR confidence to accept a plate reading
-    min_confidence: float = 0.50
+    min_confidence: float = 0.10
     # Seconds before a cached plate reading is considered stale
     cache_ttl_seconds: float = 30.0
 

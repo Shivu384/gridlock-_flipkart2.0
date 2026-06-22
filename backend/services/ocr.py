@@ -87,13 +87,13 @@ def _run_easyocr(
         ``(plate_text, confidence)`` – both empty/0 if nothing passes threshold.
     """
     if crop.size == 0:
-        return "", 0.0
+        return "UNREADABLE", 0.0
 
     try:
         ocr_results = reader.readtext(crop, detail=1)
     except Exception as exc:
         logger.error("EasyOCR inference failed: %s", exc, exc_info=True)
-        return "", 0.0
+        return "UNREADABLE", 0.0
 
     # Collect all text snippets that pass the confidence threshold
     accepted: List[Tuple[str, float]] = []
@@ -102,7 +102,7 @@ def _run_easyocr(
             accepted.append((text.strip().upper(), conf))
 
     if not accepted:
-        return "", 0.0
+        return "UNREADABLE", 0.0
 
     # Return the highest-confidence reading
     best = max(accepted, key=lambda t: t[1])
