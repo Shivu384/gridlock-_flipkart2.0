@@ -3,7 +3,7 @@
 
 # ── Deep learning / computer vision ────────────────────────────────────────
 ultralytics>=8.2.0       # YOLOv8 + ByteTrack tracker
-opencv-python>=4.9.0     # VideoCapture, annotation, polygon tests
+opencv-python-headless>=4.9.0     # VideoCapture, annotation, polygon tests
 
 # ── OCR ────────────────────────────────────────────────────────────────────
 easyocr>=1.7.1

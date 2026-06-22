@@ -149,9 +149,9 @@ class ViolationConfig:
 class OCRConfig:
     """EasyOCR settings."""
 
-    enabled: bool = False
+    enabled: bool = True
     languages: List[str] = field(default_factory=lambda: ["en"])
-    gpu: bool = True
+    gpu: bool = field(default_factory=lambda: _default_device() == "cuda")
     # Async thread-pool workers dedicated to OCR
     ocr_workers: int = 2
     # Minimum OCR confidence to accept a plate reading

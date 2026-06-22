@@ -517,15 +517,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     # ------------------------------------------------------------------
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",   # React CRA dev server
-            "http://localhost:5173",   # Vite dev server
-            "http://localhost:8080",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
-            "https://gridlock-flipkart20.vercel.app"
-            # Add production origin(s) here, e.g. "https://gridlock.example.com"
-        ],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -551,12 +543,14 @@ app = create_app()
 # Development entry-point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    import os
     import uvicorn
 
+    port = int(os.environ.get("PORT", 7860))
     uvicorn.run(
         "backend.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,          # disable reload – it conflicts with CV threads
         log_level="info",
         workers=1,             # must be 1: VideoProcessor is not fork-safe
