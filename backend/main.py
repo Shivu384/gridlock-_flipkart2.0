@@ -109,7 +109,8 @@ class PipelineState:
         self._frame_timestamps: Deque[float] = deque(maxlen=60)  # rolling FPS window
         self._total_violations: int = 0
         self._ocr_reads: int = 0
-        self._seen_track_ids: set[int] = set()
+        self._seen_track_ids: dict[int, None] = {}
+        self._total_vehicles_tracked: int = 0
 
         # Violation history (capped at 10 000 entries)
         self._violations: Deque[ViolationEvent] = deque(maxlen=10_000)
@@ -143,6 +144,7 @@ class PipelineState:
             self._total_violations = 0
             self._ocr_reads = 0
             self._seen_track_ids.clear()
+            self._total_vehicles_tracked = 0
             self._violations.clear()
             self._loop = loop
 
@@ -253,9 +255,18 @@ class PipelineState:
             # New track IDs
             new_tracks: list[int] = []
             for det in result.detections:
-                if det.track_id is not None and det.track_id not in self._seen_track_ids:
-                    self._seen_track_ids.add(det.track_id)
-                    new_tracks.append(det.track_id)
+                tid = det.track_id
+                if tid is not None:
+                    if tid not in self._seen_track_ids:
+                        new_tracks.append(tid)
+                    else:
+                        del self._seen_track_ids[tid]
+                    self._seen_track_ids[tid] = None
+            
+            self._total_vehicles_tracked += len(new_tracks)
+
+            while len(self._seen_track_ids) > 5000:
+                self._seen_track_ids.pop(next(iter(self._seen_track_ids)))
 
         loop = self._loop
         if loop.is_closed():
@@ -314,7 +325,7 @@ class PipelineState:
                         "frame_id": result.frame_id,
                         "fps": self._rolling_fps(),
                         "total_violations": self._total_violations,
-                        "vehicles_tracked": len(self._seen_track_ids),
+                        "vehicles_tracked": self._total_vehicles_tracked,
                         "detections_count": len(result.detections),
                     },
                 ),
@@ -400,7 +411,7 @@ class PipelineState:
             return {
                 "fps": round(fps, 2),
                 "total_violations": self._total_violations,
-                "vehicles_tracked": len(self._seen_track_ids),
+                "vehicles_tracked": self._total_vehicles_tracked,
                 "ocr_reads": self._ocr_reads,
                 "frames_processed": self._frames_processed,
                 "uptime_seconds": round(elapsed, 1),

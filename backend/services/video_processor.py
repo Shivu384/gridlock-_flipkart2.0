@@ -478,18 +478,39 @@ class VideoProcessor:
 
     def _propagate_plates(self, detections: List[DetectionRecord]) -> None:
         """
-        Assign plate text from ``TrackManager`` cache to matching vehicle
-        detections so that violation events carry plate information at
-        the time of the rule evaluation (even before OCR completes).
-
-        This is a best-effort heuristic: it looks up the plate text stored
-        in the ``VehicleTrack`` (written by the OCR callback) for each
-        detection whose ``track_id`` is known.
+        Assign plate text to vehicle detections using spatial association
+        and track memory.
         """
-        for det in detections:
-            if det.track_id is None or det.plate_text is not None:
+        plates = [d for d in detections if d.class_name == "Plate" and d.plate_text]
+        vehicles = [d for d in detections if d.class_name in ("WithHelmet", "WithoutHelmet", "TripleRiding")]
+
+        for vehicle in vehicles:
+            if vehicle.plate_text is not None:
                 continue
-            track = self._track_mgr.get(det.track_id)
-            if track and track.plate_text:
-                det.plate_text = track.plate_text
-                det.plate_confidence = track.plate_confidence
+
+            # 1. Check if we already remembered the plate for this vehicle's track
+            if vehicle.track_id is not None:
+                track = self._track_mgr.get(vehicle.track_id)
+                if track and track.plate_text:
+                    vehicle.plate_text = track.plate_text
+                    vehicle.plate_confidence = track.plate_confidence
+                    continue
+
+            # 2. If not, try spatial association with current plates
+            for plate in plates:
+                px = (plate.bbox.x1 + plate.bbox.x2) // 2
+                py = (plate.bbox.y1 + plate.bbox.y2) // 2
+                
+                if (vehicle.bbox.x1 <= px <= vehicle.bbox.x2 and
+                    vehicle.bbox.y1 <= py <= vehicle.bbox.y2):
+                    
+                    vehicle.plate_text = plate.plate_text
+                    vehicle.plate_confidence = plate.plate_confidence
+                    
+                    # Remember it for this vehicle's track
+                    if vehicle.track_id is not None:
+                        track = self._track_mgr.get(vehicle.track_id)
+                        if track:
+                            track.plate_text = plate.plate_text
+                            track.plate_confidence = plate.plate_confidence
+                    break
