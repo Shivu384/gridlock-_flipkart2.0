@@ -4,14 +4,14 @@ WORKDIR /app
 
 # Install system dependencies required by OpenCV and EasyOCR
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     curl \
     gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js for building the React frontend
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 

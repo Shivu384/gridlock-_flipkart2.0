@@ -13,7 +13,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { ACTIONS } from '../context/PipelineContext';
 
-const _API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const _API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:8000" : window.location.origin);
 const WS_URL =
   _API_URL
     .replace("https://", "wss://")

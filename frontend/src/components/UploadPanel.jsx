@@ -10,7 +10,7 @@ import { useState, useRef, useCallback } from 'react';
 import { usePipeline } from '../context/PipelineContext';
 import { ACTIONS } from '../context/PipelineContext';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:8000" : window.location.origin);
 
 const CLASS_COLORS = {
   WithHelmet:    { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/40' },
