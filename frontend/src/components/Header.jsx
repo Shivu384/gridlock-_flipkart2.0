@@ -75,8 +75,8 @@ export default function Header() {
 
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-slate-100 font-black text-xl tracking-widest uppercase">
-              Gridlock
+            <span className="font-bold text-2xl tracking-widest text-slate-100 flex items-center">
+              OmniGuard-Vision
             </span>
             <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px] font-bold font-mono tracking-wider border border-blue-500/30">
               AI
