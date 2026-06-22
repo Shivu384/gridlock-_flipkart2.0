@@ -1,3 +1,11 @@
+---
+title: OmniGuard Vision
+emoji: 🚦
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
 # Gridlock — Traffic Violation Detection Engine
 
 Modular, multi-threaded traffic violation detection using **YOLOv8**, **EasyOCR**, and **OpenCV**.
@@ -184,3 +192,4 @@ Each frame produces a `FrameResult` with:
 | Frame skip | 3 (every 3rd frame decoded) |
 | OCR | Async, cached per track ID |
 | ROI filter | IoU pre-check + pointPolygonTest |
+
