@@ -88,3 +88,6 @@ htmlcov/
 # ─── EasyOCR / torch cache ────────────────────────────────────────────────────
 .EasyOCR/
 torch_cache/
+
+
+Access Token.txt
