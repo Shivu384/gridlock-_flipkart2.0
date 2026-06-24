@@ -1,4 +1,4 @@
----
+﻿---
 title: OmniGuard Vision
 emoji: 🚦
 colorFrom: blue
@@ -6,190 +6,107 @@ colorTo: indigo
 sdk: docker
 pinned: false
 ---
-# Gridlock — Traffic Violation Detection Engine
 
-Modular, multi-threaded traffic violation detection using **YOLOv8**, **EasyOCR**, and **OpenCV**.
+# OmniGuard-Vision 🚦
 
----
+**Production-Grade Edge-to-Cloud AI for Traffic Enforcement**
 
-## Architecture
+OmniGuard-Vision is a multi-threaded, full-stack computer vision platform designed to automate traffic violation detection. Using a state-of-the-art **YOLO26n** tracking engine alongside **EasyOCR**, this system accurately flags violations such as Helmetless Riding, Triple Riding, and Illegal Parking in real-time, automatically capturing the license plate of the offender.
 
-```
-gridlock/
-├── inference_engine.py          ← Top-level façade & CLI entry-point
-├── best.pt                      ← Custom YOLOv8 model (place here)
-├── requirements.txt
-└── backend/
-    ├── core/
-    │   ├── config.py            ← All configuration (including parking ROI)
-    │   └── state_manager.py     ← Thread-safe state (RLock-protected)
-    └── services/
-        ├── detector.py          ← YOLOv8 wrapper with ByteTrack tracking
-        ├── tracker.py           ← Per-track metadata registry
-        ├── ocr.py               ← Async EasyOCR with per-track caching
-        ├── violation_engine.py  ← Rule functions + orchestrator
-        └── video_processor.py  ← Producer/Consumer pipeline
-```
+## 🌟 Features
+
+- **Full-Stack Architecture:** Lightning-fast FastAPI asynchronous backend paired with a beautiful, dynamic React + Vite frontend dashboard.
+- **YOLO26n + ByteTrack:** High-speed, high-accuracy vehicle tracking and violation classification.
+- **Asynchronous OCR:** License plate recognition runs in a separate thread pool to prevent video stuttering.
+- **Live WebSocket Streaming:** View bounding boxes and tracking IDs drawn over the video stream in real-time with sub-millisecond socket latency.
+- **Historical Analytics:** View captured violation records and geographical heatmaps.
+- **Hugging Face Ready:** Fully containerised for instant deployment to cloud data centres.
 
 ---
 
-## Quick Start
+## 🚀 Live Cloud Demo
 
-### 1. Install dependencies
+Test the platform instantly without installing anything locally!
+👉 **[OmniGuard-Vision on Hugging Face Spaces](https://huggingface.co/spaces/Lokeshm25/OmniGuard-Vision)**
 
-```bash
-# Create venv (recommended)
-python -m venv .venv
-.venv\Scripts\activate          # Windows
-# source .venv/bin/activate     # Linux/macOS
+---
 
+## 💻 Instructions to Run Locally
+
+You can run OmniGuard-Vision locally using either the unified Docker container or by running the backend and frontend separately (Development Mode). 
+
+### Method 1: Running via Docker (Recommended)
+This method perfectly mirrors our cloud deployment architecture.
+*Prerequisite: Docker must be installed.*
+
+1. **Build the Docker image:**
+   `bash
+   docker build -t omniguard-vision .
+   `
+2. **Run the container on port 7860:**
+   `bash
+   docker run -p 7860:7860 omniguard-vision
+   `
+3. **Open your web browser:** http://localhost:7860
+
+---
+
+### Method 2: Running via Development Mode
+Use this method if you wish to test local hardware features like Webcam inference.
+*Prerequisites: Python 3.11+ and Node.js v20+*
+
+#### Step A: Start the FastAPI Backend
+`bash
+# 1. Install the required Python dependencies
 pip install -r requirements.txt
 
-# CUDA GPU support (adjust cu121 to your CUDA version)
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-```
+# 2. Start the Uvicorn server
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
+`
 
-### 2. Place your model
+#### Step B: Start the React Frontend
+`bash
+# 1. Navigate to the frontend directory
+cd frontend
 
-```
-gridlock/best.pt
-```
+# 2. Install the Node package dependencies
+npm install
 
-### 3. Run on a video file
-
-```bash
-python inference_engine.py --source traffic.mp4 --show --output out.mp4 --json-output results.json
-```
-
-### 4. Run on a webcam
-
-```bash
-python inference_engine.py --source 0 --show
-```
+# 3. Start the Vite development server
+npm run dev
+`
+Open your web browser to the local URL provided in the terminal (usually http://localhost:5173).
 
 ---
 
-## CLI Reference
+## 🏗️ Project Architecture
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--source` / `-s` | `0` | Video file, RTSP URL, or camera index |
-| `--show` | off | Display annotated frames (Q to quit) |
-| `--output` / `-o` | None | Write annotated mp4 to this path |
-| `--json-output` / `-j` | None | Write per-frame JSON to this path |
-| `--max-frames` / `-n` | None | Stop after N processed frames |
-| `--frame-skip` | `3` | Process every Nth raw frame |
-| `--device` | `cuda` | `cuda` or `cpu` |
-| `--no-half` | off | Disable FP16 (required for CPU) |
-| `--scale` | `1.0` | Display scale (does not affect output) |
-
----
-
-## Configuration
-
-All system parameters live in [`backend/core/config.py`](backend/core/config.py).
-
-### Parking ROI
-
-Edit the `parking_roi` list in `ViolationConfig`:
-
-```python
-# config.py → ViolationConfig
-parking_roi: List[Tuple[int, int]] = [
-    (200, 300),   # top-left
-    (800, 300),   # top-right
-    (800, 600),   # bottom-right
-    (200, 600),   # bottom-left
-]
-```
-
-Coordinates are pixel positions in the **resized** 1280×720 frame.
-
-### Frame Skip
-
-```python
-# config.py → VideoConfig
-frame_skip: int = 3   # process frames 0, 3, 6, 9, …
-```
+`text
+OmniGuard-Vision/
+├── best.pt                      ← Custom YOLO26n weights
+├── Dockerfile                   ← Unified deployment container
+├── backend/                     ← FastAPI Application
+│   ├── main.py                  ← REST API, WebSocket streams, and SPA routing
+│   ├── core/                    
+│   │   ├── config.py            ← All configuration & Parking ROI geometry
+│   │   └── state_manager.py     ← Thread-safe state (RLock-protected)
+│   └── services/
+│       ├── detector.py          ← YOLO26n wrapper with ByteTrack tracking
+│       ├── ocr.py               ← Async EasyOCR with caching
+│       └── video_processor.py   ← Heavy CV Consumer thread
+└── frontend/                    ← React + Vite Dashboard
+    ├── src/
+    │   ├── components/          ← Reusable UI Components
+    │   ├── context/             ← React Context (Global State)
+    │   └── hooks/               ← useWebSocket with auto-reconnection logic
+`
 
 ---
 
-## Violation Rules
+## 🚨 Violation Rules Engine
 
-| # | Rule | Trigger |
-|---|------|---------|
-| 1 | `WithoutHelmet` | Model detects class `WithoutHelmet` |
-| 2 | `TripleRiding` | Model detects class `TripleRiding` |
-| 3 | `IllegalParking` | Vehicle inside ROI polygon for ≥ 30 consecutive processed frames |
-
----
-
-## Python API
-
-```python
-from inference_engine import InferenceEngine, InferenceConfig
-from backend.core.config import AppConfig, ViolationConfig
-
-# Customise the parking ROI
-cfg = AppConfig()
-cfg.violation.parking_roi = [(100, 200), (700, 200), (700, 500), (100, 500)]
-cfg.video.frame_skip = 3
-
-icfg = InferenceConfig(show=True, output_path="annotated.mp4")
-
-engine = InferenceEngine(cfg)
-results = engine.run(source="traffic.mp4", inference_config=icfg)
-
-for r in results:
-    if r.violations:
-        print(r.frame_id, [v.violation_type for v in r.violations])
-```
-
----
-
-## Output Schema
-
-Each frame produces a `FrameResult` with:
-
-```json
-{
-  "frame_id": 42,
-  "timestamp": "2025-01-01T12:00:00.000+00:00",
-  "detections": [
-    {
-      "class_id": 2,
-      "class_name": "WithoutHelmet",
-      "confidence": 0.87,
-      "bbox": {"x1": 120, "y1": 80, "x2": 200, "y2": 160},
-      "track_id": 7,
-      "plate_text": "MH12AB1234",
-      "plate_confidence": 0.93
-    }
-  ],
-  "violations": [
-    {
-      "violation_type": "WithoutHelmet",
-      "frame_id": 42,
-      "timestamp": "...",
-      "track_id": 7,
-      "plate_text": "MH12AB1234",
-      "bbox": {"x1": 120, "y1": 80, "x2": 200, "y2": 160},
-      "confidence": 0.87,
-      "metadata": {}
-    }
-  ]
-}
-```
-
----
-
-## Performance Targets
-
-| Metric | Target |
-|--------|--------|
-| Resolution | 720p (1280×720) |
-| Processing rate | ≥ 10 FPS on T4 GPU |
-| Frame skip | 3 (every 3rd frame decoded) |
-| OCR | Async, cached per track ID |
-| ROI filter | IoU pre-check + pointPolygonTest |
-
+| Violation | Trigger Logic |
+|-----------|---------------|
+| **Helmetless Riding** | Model detects bounding box of class WithoutHelmet |
+| **Triple Riding** | Model detects bounding box of class TripleRiding |
+| **Illegal Parking** | Stationary vehicle dwells inside the pre-defined ROI polygon for ≥ 30 frames |
