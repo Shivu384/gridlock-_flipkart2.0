@@ -1,4 +1,4 @@
-﻿---
+---
 title: OmniGuard Vision
 emoji: 🚦
 colorFrom: blue
@@ -40,11 +40,11 @@ This method perfectly mirrors our cloud deployment architecture.
 *Prerequisite: Docker must be installed.*
 
 1. **Build the Docker image:**
-   `bash
+   `ash
    docker build -t omniguard-vision .
    `
 2. **Run the container on port 7860:**
-   `bash
+   `ash
    docker run -p 7860:7860 omniguard-vision
    `
 3. **Open your web browser:** http://localhost:7860
@@ -56,7 +56,7 @@ Use this method if you wish to test local hardware features like Webcam inferenc
 *Prerequisites: Python 3.11+ and Node.js v20+*
 
 #### Step A: Start the FastAPI Backend
-`bash
+`ash
 # 1. Install the required Python dependencies
 pip install -r requirements.txt
 
@@ -65,7 +65,7 @@ python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 `
 
 #### Step B: Start the React Frontend
-`bash
+`ash
 # 1. Navigate to the frontend directory
 cd frontend
 
@@ -81,7 +81,7 @@ Open your web browser to the local URL provided in the terminal (usually http://
 
 ## 🏗️ Project Architecture
 
-`text
+`	ext
 OmniGuard-Vision/
 ├── best.pt                      ← Custom YOLO26n weights
 ├── Dockerfile                   ← Unified deployment container
