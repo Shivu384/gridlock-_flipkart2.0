@@ -40,14 +40,14 @@ This method perfectly mirrors our cloud deployment architecture.
 *Prerequisite: Docker must be installed.*
 
 1. **Build the Docker image:**
-   `ash
+   ```bash
    docker build -t omniguard-vision .
-   `
+   ```
 2. **Run the container on port 7860:**
-   `ash
+   ```bash
    docker run -p 7860:7860 omniguard-vision
-   `
-3. **Open your web browser:** http://localhost:7860
+   ```
+3. **Open your web browser:** `http://localhost:7860`
 
 ---
 
@@ -56,16 +56,16 @@ Use this method if you wish to test local hardware features like Webcam inferenc
 *Prerequisites: Python 3.11+ and Node.js v20+*
 
 #### Step A: Start the FastAPI Backend
-`ash
+```bash
 # 1. Install the required Python dependencies
 pip install -r requirements.txt
 
 # 2. Start the Uvicorn server
 python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
-`
+```
 
 #### Step B: Start the React Frontend
-`ash
+```bash
 # 1. Navigate to the frontend directory
 cd frontend
 
@@ -74,14 +74,14 @@ npm install
 
 # 3. Start the Vite development server
 npm run dev
-`
-Open your web browser to the local URL provided in the terminal (usually http://localhost:5173).
+```
+Open your web browser to the local URL provided in the terminal (usually `http://localhost:5173`).
 
 ---
 
 ## 🏗️ Project Architecture
 
-`	ext
+```text
 OmniGuard-Vision/
 ├── best.pt                      ← Custom YOLO26n weights
 ├── Dockerfile                   ← Unified deployment container
@@ -99,7 +99,7 @@ OmniGuard-Vision/
     │   ├── components/          ← Reusable UI Components
     │   ├── context/             ← React Context (Global State)
     │   └── hooks/               ← useWebSocket with auto-reconnection logic
-`
+```
 
 ---
 
@@ -107,6 +107,6 @@ OmniGuard-Vision/
 
 | Violation | Trigger Logic |
 |-----------|---------------|
-| **Helmetless Riding** | Model detects bounding box of class WithoutHelmet |
-| **Triple Riding** | Model detects bounding box of class TripleRiding |
+| **Helmetless Riding** | Model detects bounding box of class `WithoutHelmet` |
+| **Triple Riding** | Model detects bounding box of class `TripleRiding` |
 | **Illegal Parking** | Stationary vehicle dwells inside the pre-defined ROI polygon for ≥ 30 frames |
